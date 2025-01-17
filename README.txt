@@ -5,7 +5,7 @@ first do
     pip install audioset_download
     pip install librosa
 
-Then run Audio_Download
+Then run Audio_Download *THIS WILL TAKE FORREVVERRR* 
 
     python Audio_Download.py
 
