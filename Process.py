@@ -5,8 +5,6 @@ import librosa.display
 import matplotlib.pyplot as plt
 import numpy as np
 from tqdm import tqdm
-from Fourier import discrete_fourier
-from WindowFourier import STF
 
 # Initialize DataFrame
 df = pd.DataFrame(columns=["Label", "Audio Length", "Audio Sample", "Spectrogram"])
@@ -32,9 +30,9 @@ with tqdm(total=total_files, desc="Processing Audio Files") as pbar:
                         pbar.update(1)
                         continue
 
-                    # Compute mel spectrogram
-                    matrix, freqsX, time_steps = STF(audio, sr, nSamples=86, stepSize=10)
-                    S = librosa.feature.melspectrogram(S=matrix, sr=sr, n_mels=24, fmax=40000)
+                    # Compute STFT and mel spectrogram
+                    stft_matrix = librosa.stft(audio, n_fft=2048, hop_length=512)
+                    S = librosa.feature.melspectrogram(S=np.abs(stft_matrix) ** 2, sr=sr, n_mels=24, fmax=40000)
                     S_dB = librosa.power_to_db(S, ref=np.mean)
 
                     # Append data to DataFrame
@@ -52,6 +50,7 @@ with tqdm(total=total_files, desc="Processing Audio Files") as pbar:
 # Optionally, display the first spectrogram
 if not df.empty:
     first_spectrogram = df.iloc[0]["Spectrogram"]
+    print(first_spectrogram.shape)
     plt.figure(figsize=(10, 4))
     librosa.display.specshow(first_spectrogram, sr=sr, x_axis='time', y_axis='mel')
     plt.colorbar(format='%+2.0f dB')
