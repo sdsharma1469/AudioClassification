@@ -1,4 +1,4 @@
-from Fourier import complex_arr_magnitude, discrete_fourier
+from Fourier import complex_arr_magnitude, discrete_fourier, fast_fourier
 import numpy as np
 
 def STF(a, sr, nSamples, stepSize):
@@ -12,9 +12,9 @@ def STF(a, sr, nSamples, stepSize):
     num_windows = (n - windowLength) // stepSize + 1  # Number of time windows
     
     # Debugging: print values to check
-    print(f"Signal length: {n}")
-    print(f"Window length: {windowLength}")
-    print(f"Number of windows: {num_windows}")
+    # print(f"Signal length: {n}")
+    # print(f"Window length: {windowLength}")
+    # print(f"Number of windows: {num_windows}")
 
     # Avoid negative or zero dimensions for the matrix
     if num_windows <= 0 or windowLength // 2 <= 0:
@@ -26,7 +26,7 @@ def STF(a, sr, nSamples, stepSize):
     for i in range(0, n - windowLength + 1, stepSize):
         # Extract the current time window
         window = a[i:i + windowLength]
-        x, freqsX = discrete_fourier(window, sr)
+        x, freqsX = fast_fourier(window, sr)
         magX_dB = 200 * np.log10(np.maximum(x, 1e-10))  
         matrix[:, i // stepSize] = magX_dB[:windowLength // 2]  # Only keep positive frequencies
         time_steps.append(i / sr)  # Append the time corresponding to the start of the window

@@ -17,6 +17,12 @@ def discrete_fourier(v, sr):
     f = np.dot(m, v)  # Apply the DFT using matrix multiplication
     return complex_arr_magnitude(f[:len(f) // 2]), frequencies[:len(frequencies) // 2]
 
+
+def fast_fourier(signal, sr):
+    frequencies = np.fft.fftfreq(len(signal), d=1/sr)
+    fourier_transform = np.fft.fft(signal)
+    return fourier_transform, frequencies
+
 def complex_arr_magnitude(a):
     magnitudes = []  # To store the magnitudes
     for i in a:
