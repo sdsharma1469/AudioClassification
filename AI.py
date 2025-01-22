@@ -2,13 +2,32 @@ import os
 import librosa
 import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.neural_network import MLPClassifier
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import GridSearchCV
+
+
+param_grid = {
+    'n_estimators': [100, 200, 300],
+    'max_depth': [None, 10, 20, 30],
+    'min_samples_split': [2, 5, 10],
+    'min_samples_leaf': [1, 2, 4]
+}
 
 def extract_features(audio_file):
     y, sr = librosa.load(audio_file, sr=None)
-    mfccs = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13)
-    return np.mean(mfccs.T, axis=0)
+    mfccs = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=20)  # Increase to 20 or more
+    chroma = librosa.feature.chroma_stft(y=y, sr=sr)
+    spectral_contrast = librosa.feature.spectral_contrast(y=y, sr=sr)
+    
+    features = np.concatenate([
+        np.mean(mfccs.T, axis=0),
+        np.mean(chroma.T, axis=0),
+        np.mean(spectral_contrast.T, axis=0)
+    ])
+    return features
+
 
 def process_audio_files(directory):
     features_list = []
@@ -35,14 +54,17 @@ print("Labels:", labels)
 
 X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.2, random_state=42)
 
-# Step 2: Build a classifier (Multi-layer Perceptron)
-model = MLPClassifier(hidden_layer_sizes=(64, 64), max_iter=300, random_state=42)
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
 
-# Step 3: Train the model
-model.fit(X_train, y_train)
+# Step 2: Build a classifier (Multi-layer Perceptron)
+grid_search = GridSearchCV(RandomForestClassifier(n_estimators= 100, class_weight='balanced',random_state=42), param_grid, cv=5, scoring='accuracy')
+grid_search.fit(X_train, y_train)
+best_model = grid_search.best_estimator_
 
 # Step 4: Evaluate the model
-y_pred = model.predict(X_test)
+y_pred = best_model.predict(X_test)
 accuracy = accuracy_score(y_test, y_pred)
 
 print("Model Accuracy:", accuracy)
