@@ -7,6 +7,12 @@ import numpy as np
 from tqdm import tqdm
 from Fourier import discrete_fourier
 from WindowFourier import STF
+from sklearn.model_selection import train_test_split
+import tensorflow as tf
+from tensorflow.keras import layers, models
+import warnings
+from model import MyConv2D
+warnings.filterwarnings('ignore')
 
 # Initialize DataFrame
 df = pd.DataFrame(columns=["Label", "Audio Length", "Audio Sample", "Spectrogram"])
@@ -31,11 +37,13 @@ with tqdm(total=total_files, desc="Processing Audio Files") as pbar:
                     if audio_length <= 0:
                         pbar.update(1)
                         continue
-
-                    # Compute mel spectrogram
-                    matrix, freqsX, time_steps = STF(audio, sr, nSamples=86, stepSize=10)
-                    S = librosa.feature.melspectrogram(S=matrix, sr=sr, n_mels=24, fmax=40000)
-                    S_dB = librosa.power_to_db(S, ref=np.mean)
+                    
+                    n_mels = 128
+                    fmax = 40000
+                    #matrix, freqsX, time_steps = STF(audio, sr, nSamples=86, stepSize=10)
+                    D = librosa.stft(audio, n_fft=1024, hop_length=10, win_length=128)
+                    S = librosa.feature.melspectrogram(S=np.abs(D)**2, sr=sr, n_mels=n_mels, fmax=fmax)
+                    S_dB = librosa.power_to_db(S, ref=np.max)
 
                     # Append data to DataFrame
                     df = df._append(
@@ -49,12 +57,15 @@ with tqdm(total=total_files, desc="Processing Audio Files") as pbar:
                     )
                     pbar.update(1)
 
-# Optionally, display the first spectrogram
-if not df.empty:
-    first_spectrogram = df.iloc[0]["Spectrogram"]
-    plt.figure(figsize=(10, 4))
-    librosa.display.specshow(first_spectrogram, sr=sr, x_axis='time', y_axis='mel')
-    plt.colorbar(format='%+2.0f dB')
-    plt.title(f'Mel Spectrogram of {df.iloc[0]["Label"]}')
-    plt.tight_layout()
-    plt.show()
+# Get the first spectrogram from the DataFrame
+first_spectrogram = df.iloc[12]["Spectrogram"]
+
+# Plot the spectrogram using librosa display
+plt.figure(figsize=(10, 6))
+librosa.display.specshow(first_spectrogram, x_axis='time', y_axis='mel', cmap='coolwarm')
+plt.colorbar(format='%+2.0f dB')
+plt.title('First Spectrogram')
+plt.show()
+
+X_train = df["Spectogram"]
+Y_train = df["Label"]
