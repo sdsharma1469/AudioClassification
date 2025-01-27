@@ -17,6 +17,10 @@ Then the AI
 
     python AI.py 
 
+    AND
+
+    python Processing.py
+
 all of these will take a WHILE to run 
 if you have the time let the audio download run for the whole hour or so 
 
